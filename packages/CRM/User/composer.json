@@ -1,0 +1,31 @@
+{
+    "name": "crm/user",
+    "description": "User management package for Laravel CRM system",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "CRM Team",
+            "email": "team@crm.com"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "laravel/framework": "^12.0",
+        "crm/core": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "CRM\\User\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "CRM\\User\\Providers\\UserServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

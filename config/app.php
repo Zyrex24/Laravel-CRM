@@ -159,6 +159,7 @@ return [
         /*
          * Package Service Providers...
          */
+        CRM\Core\Providers\CoreServiceProvider::class,
 
         /*
          * Application Service Providers...

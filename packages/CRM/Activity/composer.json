@@ -1,0 +1,34 @@
+{
+    "name": "crm/activity",
+    "description": "Activity and task management package for Laravel CRM system",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "CRM Team",
+            "email": "team@crm.com"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "laravel/framework": "^12.0",
+        "crm/core": "*",
+        "crm/user": "*",
+        "crm/contact": "*",
+        "crm/lead": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "CRM\\Activity\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "CRM\\Activity\\Providers\\ActivityServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

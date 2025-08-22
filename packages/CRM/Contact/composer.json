@@ -1,0 +1,32 @@
+{
+    "name": "crm/contact",
+    "description": "Contact management package for Laravel CRM system",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "CRM Team",
+            "email": "team@crm.com"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "laravel/framework": "^12.0",
+        "crm/core": "*",
+        "crm/user": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "CRM\\Contact\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "CRM\\Contact\\Providers\\ContactServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
