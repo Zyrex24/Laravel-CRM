@@ -160,6 +160,11 @@ return [
          * Package Service Providers...
          */
         CRM\Core\Providers\CoreServiceProvider::class,
+        CRM\User\Providers\UserServiceProvider::class,
+        CRM\Contact\Providers\ContactServiceProvider::class,
+        CRM\Lead\Providers\LeadServiceProvider::class,
+        CRM\Activity\Providers\ActivityServiceProvider::class,
+        CRM\DataGrid\Providers\DataGridServiceProvider::class,
 
         /*
          * Application Service Providers...
