@@ -165,6 +165,7 @@ return [
         CRM\Lead\Providers\LeadServiceProvider::class,
         CRM\Activity\Providers\ActivityServiceProvider::class,
         CRM\DataGrid\Providers\DataGridServiceProvider::class,
+        CRM\Email\Providers\EmailServiceProvider::class,
 
         /*
          * Application Service Providers...
