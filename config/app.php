@@ -157,17 +157,6 @@ return [
 
     'providers' => ServiceProvider::defaultProviders()->merge([
         /*
-         * Package Service Providers...
-         */
-        CRM\Core\Providers\CoreServiceProvider::class,
-        CRM\User\Providers\UserServiceProvider::class,
-        CRM\Contact\Providers\ContactServiceProvider::class,
-        CRM\Lead\Providers\LeadServiceProvider::class,
-        CRM\Activity\Providers\ActivityServiceProvider::class,
-        CRM\DataGrid\Providers\DataGridServiceProvider::class,
-        CRM\Email\Providers\EmailServiceProvider::class,
-
-        /*
          * Application Service Providers...
          */
         App\Providers\AppServiceProvider::class,
