@@ -3,222 +3,104 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Contact;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class ContactController extends Controller
 {
-    /**
-     * Display a listing of contacts.
-     */
     public function index(Request $request): JsonResponse
     {
-        $query = $request->get('query', '');
-        $type = $request->get('type', 'all'); // person, organization, all
-        $perPage = $request->get('per_page', 15);
+        $query = Contact::query()->with(['organization']);
 
-        // Mock data for demonstration
-        $contacts = collect([
-            [
-                'id' => 1,
-                'name' => 'John Doe',
-                'email' => 'john@example.com',
-                'phone' => '+1234567890',
-                'type' => 'person',
-                'company' => 'Tech Corp',
-                'created_at' => now()->subDays(5),
-                'updated_at' => now()->subDays(2)
-            ],
-            [
-                'id' => 2,
-                'name' => 'Tech Solutions Inc',
-                'email' => 'info@techsolutions.com',
-                'phone' => '+1987654321',
-                'type' => 'organization',
-                'industry' => 'Technology',
-                'created_at' => now()->subDays(10),
-                'updated_at' => now()->subDays(1)
-            ]
-        ]);
-
-        // Apply filters
-        if ($query) {
-            $contacts = $contacts->filter(function ($contact) use ($query) {
-                return stripos($contact['name'], $query) !== false ||
-                       stripos($contact['email'], $query) !== false;
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('company', 'like', "%{$search}%");
             });
         }
 
-        if ($type !== 'all') {
-            $contacts = $contacts->where('type', $type);
+        if ($request->has('status')) {
+            $query->where('status', $request->input('status'));
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $contacts->values(),
-            'meta' => [
-                'total' => $contacts->count(),
-                'per_page' => $perPage,
-                'current_page' => 1
-            ]
-        ]);
+        $perPage = $request->input('per_page', 15);
+        $contacts = $query->paginate($perPage);
+
+        return response()->json($contacts);
     }
 
-    /**
-     * Store a newly created contact.
-     */
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:contacts,email',
-            'phone' => 'nullable|string|max:20',
-            'type' => 'required|in:person,organization',
-            'company' => 'nullable|string|max:255',
-            'industry' => 'nullable|string|max:255'
-        ]);
+        try {
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|unique:contacts,email',
+                'phone' => 'nullable|string|max:255',
+                'title' => 'nullable|string|max:255',
+                'company' => 'nullable|string|max:255',
+                'organization_id' => 'nullable|exists:organizations,id',
+                'address' => 'nullable|array',
+                'notes' => 'nullable|string',
+                'source' => 'nullable|string|max:255',
+                'status' => 'nullable|string|in:active,inactive',
+                'birthday' => 'nullable|date',
+                'social_media' => 'nullable|array',
+                'lead_score' => 'nullable|string|max:255',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            $contact = Contact::create($validated);
+            $contact->load('organization');
+
+            return response()->json($contact, 201);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
         }
-
-        // Mock creation
-        $contact = array_merge($request->all(), [
-            'id' => rand(1000, 9999),
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Contact created successfully',
-            'data' => $contact
-        ], 201);
     }
 
-    /**
-     * Display the specified contact.
-     */
-    public function show(int $id): JsonResponse
+    public function show(Contact $contact): JsonResponse
     {
-        // Mock data
-        $contact = [
-            'id' => $id,
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-            'phone' => '+1234567890',
-            'type' => 'person',
-            'company' => 'Tech Corp',
-            'notes' => 'Important client contact',
-            'created_at' => now()->subDays(5),
-            'updated_at' => now()->subDays(2)
-        ];
-
-        return response()->json([
-            'success' => true,
-            'data' => $contact
-        ]);
+        $contact->load(['organization', 'leads', 'activities']);
+        return response()->json($contact);
     }
 
-    /**
-     * Update the specified contact.
-     */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, Contact $contact): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:contacts,email,' . $id,
-            'phone' => 'nullable|string|max:20',
-            'type' => 'sometimes|required|in:person,organization',
-            'company' => 'nullable|string|max:255',
-            'industry' => 'nullable|string|max:255'
-        ]);
+        try {
+            $validated = $request->validate([
+                'first_name' => 'sometimes|required|string|max:255',
+                'last_name' => 'sometimes|required|string|max:255',
+                'email' => 'sometimes|required|email|unique:contacts,email,' . $contact->id,
+                'phone' => 'nullable|string|max:255',
+                'title' => 'nullable|string|max:255',
+                'company' => 'nullable|string|max:255',
+                'organization_id' => 'nullable|exists:organizations,id',
+                'address' => 'nullable|array',
+                'notes' => 'nullable|string',
+                'source' => 'nullable|string|max:255',
+                'status' => 'nullable|string|in:active,inactive',
+                'birthday' => 'nullable|date',
+                'social_media' => 'nullable|array',
+                'lead_score' => 'nullable|string|max:255',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            $contact->update($validated);
+            $contact->load('organization');
+
+            return response()->json($contact);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
         }
-
-        // Mock update
-        $contact = array_merge([
-            'id' => $id,
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-            'phone' => '+1234567890',
-            'type' => 'person',
-            'company' => 'Tech Corp',
-            'created_at' => now()->subDays(5)
-        ], $request->all(), [
-            'updated_at' => now()
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Contact updated successfully',
-            'data' => $contact
-        ]);
     }
 
-    /**
-     * Remove the specified contact.
-     */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Contact $contact): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'message' => 'Contact deleted successfully'
-        ]);
-    }
-
-    /**
-     * Get contact statistics.
-     */
-    public function stats(): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_contacts' => 150,
-                'persons' => 120,
-                'organizations' => 30,
-                'recent_contacts' => 15,
-                'growth_rate' => 12.5
-            ]
-        ]);
-    }
-
-    /**
-     * Search contacts with advanced filters.
-     */
-    public function search(Request $request): JsonResponse
-    {
-        $filters = $request->only(['query', 'type', 'company', 'industry', 'created_after', 'created_before']);
-        
-        // Mock search results
-        $results = [
-            [
-                'id' => 1,
-                'name' => 'John Doe',
-                'email' => 'john@example.com',
-                'type' => 'person',
-                'company' => 'Tech Corp',
-                'match_score' => 0.95
-            ]
-        ];
-
-        return response()->json([
-            'success' => true,
-            'data' => $results,
-            'filters_applied' => $filters,
-            'total_results' => count($results)
-        ]);
+        $contact->delete();
+        return response()->json(['message' => 'Contact deleted successfully']);
     }
 }

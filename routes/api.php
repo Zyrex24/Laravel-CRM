@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\LeadController;
+use App\Http\Controllers\Api\OrganizationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ContactController;
@@ -85,3 +90,20 @@ Route::group([], function () {
     Route::get('users/roles-permissions', [UserController::class, 'rolesAndPermissions']);
     Route::get('users/{id}/activity-log', [UserController::class, 'activityLog']);
 });
+
+// Dashboard
+Route::get('/dashboard', [DashboardController::class, 'index']);
+
+// CRM Resources
+Route::apiResource('contacts', ContactController::class);
+Route::apiResource('leads', LeadController::class);
+Route::apiResource('activities', ActivityController::class);
+Route::apiResource('organizations', OrganizationController::class);
+
+// Search endpoint
+Route::get('/search', [App\Http\Controllers\Api\SearchController::class, 'search']);
+
+// Notifications endpoints
+Route::get('/notifications', [App\Http\Controllers\Api\NotificationController::class, 'index']);
+Route::patch('/notifications/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+Route::patch('/notifications/read-all', [App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
