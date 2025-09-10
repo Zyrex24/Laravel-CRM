@@ -14,5 +14,21 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('crm-dashboard');
+});
+
+Route::get('/contacts', function () {
+    return view('contacts');
+});
+
+Route::get('/leads', function () {
+    return view('leads');
+});
+
+Route::get('/activities', function () {
+    return view('activities');
+});
+
+Route::get('/reports', function () {
+    return view('reports');
 });
